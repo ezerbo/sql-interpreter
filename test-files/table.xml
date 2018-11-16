@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<table name="table">
+	<struct>
+		<name type="string"/>
+	</struct>
+</table>
