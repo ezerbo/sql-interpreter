@@ -9,7 +9,7 @@
 
 xmlNodePtr load_metadata() {
 	xmlDocPtr metadata_file = xmlParseFile(METADATA_FILE_NAME);
-	if (!metadata_file) {
+	if (metadata_file == NULL) {
 		fprintf(stderr, "Unable to get tables metadata, exiting...");
 		exit(1);
 	}

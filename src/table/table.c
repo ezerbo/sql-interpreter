@@ -11,6 +11,7 @@
 #include "table.h"
 
 void create_table(char* table_name, char* sql_query) {
+	create_metadata_file();
 	xmlDocPtr metadata_file = xmlParseFile(METADATA_FILE_NAME);
 	xmlNodePtr metadata_root = xmlDocGetRootElement(metadata_file);
 	int attributes_count = count_attributes(sql_query);
@@ -114,12 +115,10 @@ void create_metadata_file() {
 	if(access(METADATA_FILE_NAME, F_OK) == -1) {
 		xmlDocPtr metadata_doc = xmlNewDoc(BAD_CAST "1.0");
 		xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST MDT_NODE_NAME);
-		xmlSaveFormatFileEnc(METADATA_FILE_NAME, metadata_doc, "UTF-8", 1);
 		xmlDocSetRootElement(metadata_doc, root_node);
+		xmlSaveFormatFileEnc(METADATA_FILE_NAME, metadata_doc, "UTF-8", 1);
 		xmlFreeDoc(metadata_doc);
 		xmlCleanupParser();
-	} else {
-		printf("Metadata file already exists");
 	}
 }
 
