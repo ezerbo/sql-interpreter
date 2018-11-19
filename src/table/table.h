@@ -23,7 +23,9 @@
 #define EXT ".xml"
 
 #include "../commons/commons.h"
-
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 /**
  * Table attributes definition
@@ -134,6 +136,38 @@ table_attribute* parse_attribute(char* attr_string);
  *
  **/
 void create_metadata_file();
+
+
+/**
+ * Function: get_table_structure
+ * -----------------------------
+ * Gets the structure of a table
+ *
+ */
+table_attribute* get_table_structure(xmlNodePtr root);
+
+
+/**
+ * Function: parse_table_structure
+ * -------------------------------
+ * Parses the structure of a table
+ */
+void parse_table_structure(xmlNodePtr root, table_attribute** attributes);
+
+
+/**
+ * Function: get_table_file_name
+ * -----------------------------
+ * Returns name of file holding records of a table
+ *
+ * 	table_name: Name of table
+ *
+ * 	returns: File containing records of table `table_name`
+ */
+char* get_table_file_name(char* table_name);
+
+
+void deregister(char* table_name, xmlNodePtr root);
 
 
 #endif /* TABLE_TABLE_H_ */

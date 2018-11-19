@@ -6,9 +6,10 @@ int "int"
 date "date"
 string "string"
 digit [0-9]
-word ([a-zA-Z_])+
-attr {word}[ ]({int}|{string}|{date})
-attrs ({attr}[,])+{attr}
+WORD ([a-zA-Z_])+
+ATTR {WORD}[ ]({int}|{string}|{date})
+ATTRS ({ATTR}[,])+{ATTR}
+INSERT_VALUES [:alpha:]
 
 %%
 
@@ -41,10 +42,12 @@ attrs ({attr}[,])+{attr}
 "("    		            { return LEFT_PARENTHESIS; }
 ";"						{ return SEMI_COLON; }
 
-{word}  			    { yylval.lexeme_val = strdup(yytext); return word; }
+{WORD}  			    { yylval.lexeme_val = strdup(yytext); return WORD; }
 
-{attr}  				{ yylval.lexeme_val = strdup(yytext); return attr; }
+{ATTR}  				{ yylval.lexeme_val = strdup(yytext); return ATTR; }
  
-{attrs}  				{ yylval.lexeme_val = strdup(yytext); return attrs; }
+{ATTRS}  				{ yylval.lexeme_val = strdup(yytext); return ATTRS; }
+
+{INSERT_VALUES}			{ yylval.lexeme_val = strdup(yytext); return INSERT_VALUES; }
 
 %%

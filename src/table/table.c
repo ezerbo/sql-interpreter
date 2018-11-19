@@ -5,18 +5,14 @@
  *      Author: ezerbo
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 #include "table.h"
 
 void create_table(char* table_name, char* sql_query) {
-	create_metadata_file();
-	xmlDocPtr metadata_file = xmlParseFile(METADATA_FILE_NAME);
-	xmlNodePtr metadata_root = xmlDocGetRootElement(metadata_file);
+	create_metadata_file();// skips if metadata file exists
+	xmlNodePtr metadata = load_metadata();
 	int attributes_count = count_attributes(sql_query);
-	if(!exists(table_name, metadata_root)) {
-		char* table_file_name = (char*) malloc((strlen(table_name) + 5) * sizeof(char*)); // +5 because .xml will be appended to it.
+	if(!exists(table_name, metadata)) {
+		char* table_file_name = (char*) malloc((strlen(table_name) + 4) * sizeof(char*)); // +4 because .xml will be appended to it.
 		strcpy(table_file_name, table_name);
 		strcat(table_file_name, EXT);
 		xmlDocPtr table_doc = xmlNewDoc(BAD_CAST "1.0");
@@ -43,7 +39,7 @@ void create_table(char* table_name, char* sql_query) {
 	} else {
 		fprintf(stderr, "Table with name '%s' already exists", table_name);
 	}
-	xmlFreeDoc(metadata_file);
+	xmlFreeDoc(metadata -> doc);
 	xmlCleanupParser();// Free all resources allocated by parser.
 }
 
@@ -100,15 +96,14 @@ int count_attributes(char* sql_query) {
 void register_table(char* table_name, int attributes_count) {
 	char ac_char[3];
 	snprintf(ac_char, 3, "%d", attributes_count);
-	xmlDocPtr metadata_file = xmlParseFile(METADATA_FILE_NAME);
-	xmlNodePtr root = xmlDocGetRootElement(metadata_file);
+	xmlNodePtr metadata = load_metadata();
 	xmlNodePtr table = xmlNewNode(NULL, (xmlChar*) TBL_NODE_NAME);
 	xmlSetProp(table, BAD_CAST NAME_ATTR, BAD_CAST table_name);
 	xmlSetProp(table, BAD_CAST "records_count", BAD_CAST "0");// 0 record when table is created
 	xmlSetProp(table, BAD_CAST "attributes_count", BAD_CAST ac_char);
-	xmlAddChild(root, table);
-	xmlSaveFile(METADATA_FILE_NAME, metadata_file);
-	xmlFreeDoc(metadata_file);
+	xmlAddChild(metadata, table);
+	xmlSaveFile(METADATA_FILE_NAME, metadata -> doc);
+	xmlFreeDoc(metadata -> doc);
 }
 
 void create_metadata_file() {
@@ -119,6 +114,49 @@ void create_metadata_file() {
 		xmlSaveFormatFileEnc(METADATA_FILE_NAME, metadata_doc, "UTF-8", 1);
 		xmlFreeDoc(metadata_doc);
 		xmlCleanupParser();
+	}
+}
+
+table_attribute* get_table_structure(xmlNodePtr root) {
+	table_attribute* attributes = NULL;
+	for (xmlNodePtr cur_node = root; cur_node; cur_node = cur_node -> next) {
+		if (cur_node -> type == XML_ELEMENT_NODE && !xmlStrcmp(cur_node -> name, BAD_CAST STRCT_NODE_NAME)) {
+			parse_table_structure(cur_node -> children, &attributes); //Populate the attributes list
+			break;
+		}
+		attributes = get_table_structure(cur_node -> children);
+	}
+	return attributes;
+}
+
+void parse_table_structure(xmlNodePtr root, table_attribute** attributes) {
+	for (xmlNodePtr cur_node = root; cur_node; cur_node = cur_node -> next) {
+		if (cur_node -> type == XML_ELEMENT_NODE) {
+			table_attribute* attribute = (table_attribute*) malloc(sizeof(table_attribute));
+			attribute -> name = strdup((char*) cur_node -> name);
+			attribute -> type = strdup((char*) xmlGetProp(cur_node, BAD_CAST "type"));
+			attribute -> next = *attributes;
+			*attributes = attribute;
+		}
+		parse_table_structure(cur_node -> children, attributes);
+	}
+}
+
+char* get_table_file_name(char* table_name) {
+	char* table_file_name = (char*) malloc((strlen(table_name) + 4) * sizeof(char));
+	strcpy(table_file_name, table_name);
+	strcat(table_file_name, EXT);
+	return table_file_name;
+}
+
+void deregister(char* table_name, xmlNodePtr root) {
+	for (xmlNodePtr cur_node = root; cur_node; cur_node = cur_node -> next) {
+		if (cur_node -> type == XML_ELEMENT_NODE && !xmlStrcmp(xmlGetProp(cur_node,BAD_CAST "name"), table_name)) {
+			xmlUnlinkNode(cur_node);
+			xmlSaveFile(METADATA_FILE_NAME, cur_node -> doc);
+			break;
+		}
+		deregister(table_name, cur_node -> children);
 	}
 }
 

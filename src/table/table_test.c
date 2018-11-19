@@ -7,6 +7,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include "table.h"
 
 void test_count_attributes();
@@ -16,37 +17,52 @@ void test_create_metadata_file();
 void test_register_table();
 void test_exists();
 void test_create_table();
+void test_get_table_structure();
+void test_desc();
 
 int main(int argc, char **argv) {
     //test_parse_attributes();
 	//test_count_attributes();
 	//test_parse_attribute();
-	test_create_metadata_file();
+	//test_create_metadata_file();
 	//test_register_table();
 	//test_exists();
 	//test_create_table();
+	//test_get_table_structure();
+	test_desc();
+}
+
+void test_desc() {
+	desc(strdup("user"));
+}
+
+void test_get_table_structure() {
+	xmlDocPtr metadata_file = xmlParseFile("test-files/user.xml");
+	xmlNodePtr root = xmlDocGetRootElement(metadata_file);
+	table_attribute* attribute = get_table_structure(root);
+	while(attribute != NULL) {
+		printf("Name: %s, Type %s \n", attribute -> name, attribute -> type);
+		attribute = attribute -> next;
+	}
+	xmlFreeDoc(metadata_file);
 }
 
 void test_count_attributes() {
 	printf("---------------------\n");
-	int count = count_attributes("name string,age integer,another test");
+	int count = count_attributes(strdup("name string,age integer,another test"));
 	printf("Count: %d\n", count);
 }
 
 void test_parse_attribute() {
 	printf("---------------------\n");
-	char attr[] = "name string";
-	table_attribute* attribute = parse_attribute(attr);
+	table_attribute* attribute = parse_attribute(strdup("name string"));
 	printf("Name: %s ", attribute -> name);
 	printf("Type: %s ", attribute -> type);
-	printf("attr: %s", attr);
 }
 
 void test_parse_attributes() {
 	printf("---------------------\n");
-	char attrs[] = "name string,age integer";
-	table_attribute* attributes = parse_attributes(attrs);
-
+	table_attribute* attributes = parse_attributes(strdup("name string,age integer"));
 	while(attributes != NULL) {
 		printf("Name: %s\n", attributes -> name);
 		printf("Type: %s\n", attributes -> type);
@@ -70,7 +86,5 @@ void test_exists() {
 }
 
 void test_create_table() {
-	char table_name[] = "user";
-	char sql_query[] = "name string,age integer";
-	create_table(table_name, sql_query);
+	create_table(strdup("user"), strdup("name string,age integer"));
 }
