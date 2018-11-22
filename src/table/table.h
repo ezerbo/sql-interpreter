@@ -20,6 +20,8 @@
 
 #define MDT_NODE_NAME "metadata"
 
+#define RECORD_NODE_NAME "record"
+
 #define EXT ".xml"
 
 #include "../commons/commons.h"
@@ -38,6 +40,8 @@ typedef struct table_attribute {
     struct table_attribute* next;
 } table_attribute;
 
+//Actions allowed when a table is being altered
+typedef enum ALTER_ACTION { ADD, DELETE } ALTER_ACTION;
 
 /**
  * Function: create_table
@@ -74,7 +78,7 @@ int count_attributes(char* sql_query);
  * 	returns: 1 if table exists and 0 otherwise
  *
  **/
-int exists(char* table_name, xmlNodePtr root);
+int exists(char* table_name);
 
 
 /**
@@ -139,12 +143,21 @@ void create_metadata_file();
 
 
 /**
+ * Function: get_table_attributes
+ * -----------------------------
+ * Gets attributes of a table
+ */
+table_attribute* get_table_attributes(xmlNodePtr root);
+
+
+/**
  * Function: get_table_structure
  * -----------------------------
  * Gets the structure of a table
  *
+ *
  */
-table_attribute* get_table_structure(xmlNodePtr root);
+xmlNodePtr get_table_structure(xmlNodePtr table);
 
 
 /**
@@ -167,7 +180,81 @@ void parse_table_structure(xmlNodePtr root, table_attribute** attributes);
 char* get_table_file_name(char* table_name);
 
 
-void deregister(char* table_name, xmlNodePtr root);
+/**
+ * Function: deregister
+ * --------------------
+ * Remove a table registration metadata file
+ *
+ * 	table_name: Name of the table
+ * 	metadata_root_node: Root node of the metadata file
+ *
+ * 	returns: 1 when table is successfully deregistered, 0 otherwise
+ *
+ */
+int deregister(char* table_name, xmlNodePtr metadata_root_node);
+
+/**
+ * Function: load_table
+ * --------------------
+ * Loads a table
+ *
+ * 	table_name: Name of the table to load
+ * 
+ *  returns: Root node of table file
+ */
+xmlNodePtr load_table(char *table_name);
+
+/**
+ * Function: is_valid_attribute_type
+ * ----------------------------------
+ * Assesses whether an attribute type is valide
+ *
+ * 	attribute_type: Type of the attribute
+ *
+ * 	returns: 1 if attribute type is valid and 0 otherwise
+ */
+int is_valid_attribute_type(char* attribute_type);
+
+
+/**
+ * Function: attribute_exists
+ * --------------------------
+ * Assesses whether an attribute exists
+ *
+ * 	table_name: Name of table in which to look for attribute
+ * 	attribute_name: Name of attribute to look for
+ *
+ * 	returns: 1 if attribute is found and 0 otherwise
+ */
+int attribute_exists(char *table_name, char *attribute_name);
+
+
+/**
+ * Function: update_records
+ * ------------------------
+ * Updates records of a table when a new attribute is added
+ *
+ * 	table_name: Name of table for which records will be updated
+ * 	attribute_name: Name of attribute to set for every record
+ *  action: update action(add, delete)
+ *
+ * 	returns: Number of records updated
+ */
+int update_records(char *table_name, char *attribute_name, ALTER_ACTION action);
+
+
+/**
+ * Function: is_record_updated
+ * ---------------------------
+ * Assesses whether a record in a table aleady has an attribute
+ *
+ * 	record_node: Node of the record to check
+ * 	attribute_name: Name of the attribute to find
+ *
+ * 	returns: 1 if record is updated and 0 otherwise
+ */
+int is_record_updated(xmlNodePtr record_node, char *attribute_name);
+
 
 
 #endif /* TABLE_TABLE_H_ */

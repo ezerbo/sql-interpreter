@@ -7,9 +7,11 @@
 #include <stdio.h>
 #include "commons.h"
 
-xmlNodePtr load_metadata() {
+xmlNodePtr load_metadata()
+{
 	xmlDocPtr metadata_file = xmlParseFile(METADATA_FILE_NAME);
-	if (metadata_file == NULL) {
+	if (metadata_file == NULL)
+	{
 		fprintf(stderr, "Unable to get tables metadata, exiting...");
 		exit(1);
 	}

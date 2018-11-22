@@ -22,8 +22,8 @@ int yylex(void);
 %token DIFF EQUALS STAR RIGHT_PARENTHESIS LEFT_PARENTHESIS SEMI_COLON
 
 //TOKENS MATCHING SQL COMMANDS
-%token COM_WHERE COM_SELECT COM_ALTER COM_CREATE COM_INTO COM_VALUES COM_DELETE COM_INSERT
-%token COM_FROM COM_TABLE COM_DESC COM_UPDATE COM_SET COM_DROP COM_HELP COM_ADD COM_REMOVE COM_EXIT
+%token <lexeme_val> COM_WHERE COM_SELECT COM_ALTER COM_CREATE COM_INTO COM_VALUES COM_DELETE COM_INSERT
+%token <lexeme_val> COM_FROM COM_TABLE COM_DESC COM_UPDATE COM_SET COM_DROP COM_HELP COM_ADD COM_REMOVE COM_EXIT
 
 //AGGREGATION FUNCTIONS TOKENS
 %token FUNCT_AVG FUNCT_SUM FUNCT_MIN FUNCT_MAX
@@ -53,7 +53,7 @@ aggregation_statement	: average_aggregation
 						;
 
 // Create statements explanation
-create_table_statement	: COM_CREATE COM_TABLE WORD LEFT_PARENTHESIS ATTRS RIGHT_PARENTHESIS SEMI_COLON		{ create_table($3, $5); yyparse(); };
+create_table_statement	: COM_CREATE COM_TABLE WORD LEFT_PARENTHESIS ATTRS RIGHT_PARENTHESIS SEMI_COLON		{ create($3, $5); yyparse(); };
 
 // Insert statements explanation
 insert_into_statement	: COM_INSERT COM_INTO WORD COM_VALUES LEFT_PARENTHESIS INSERT_VALUES RIGHT_PARENTHESIS SEMI_COLON	{ printf("insert"); yyparse(); };
@@ -63,8 +63,8 @@ select_statement		: COM_SELECT WORD COM_FROM WORD	SEMI_COLON	{ printf("select");
 						| COM_SELECT STAR COM_FROM WORD	SEMI_COLON	{ printf("select star"); yyparse(); };
 
 // Alter statements explanation
-alter_table_statement	: COM_ALTER COM_TABLE WORD COM_ADD ATTR	SEMI_COLON		{ printf("alter table add"); yyparse();}
-						| COM_ALTER COM_TABLE WORD COM_REMOVE WORD	SEMI_COLON	{ printf("alter table remove"); yyparse();};
+alter_table_statement	: COM_ALTER COM_TABLE WORD COM_ADD ATTR	SEMI_COLON		{ alter($3, $5, ADD); yyparse();} // ADD and DELETE are enums defined in tables/table.h
+						| COM_ALTER COM_TABLE WORD COM_REMOVE WORD	SEMI_COLON	{ alter($3, $5, DELETE); yyparse();};
 
 // Delete statements explanation
 delete_statement		: COM_DELETE COM_FROM WORD COM_WHERE WORD EQUALS WORD SEMI_COLON	{ printf("delete equals"); yyparse(); }
@@ -78,20 +78,20 @@ update_statement		: COM_UPDATE WORD COM_SET WORD EQUALS WORD SEMI_COLON								{
 						| COM_UPDATE WORD COM_SET WORD EQUALS WORD COM_WHERE WORD EQUALS WORD SEMI_COLON	{ printf("update where"); yyparse(); };
 
 // Drop statments explanation
-drop_statement			: COM_DROP COM_TABLE WORD SEMI_COLON	{ printf("drop"); yyparse(); };
+drop_statement			: COM_DROP COM_TABLE WORD SEMI_COLON	{ drop($3); yyparse(); };
 
 // Help statements explanation
-help_statement			: COM_HELP COM_SELECT SEMI_COLON { help("SELECT"); yyparse(); }	
-						| COM_HELP COM_INSERT SEMI_COLON { help("INSERT"); yyparse(); }
-						| COM_HELP COM_CREATE SEMI_COLON { help("CREATE"); yyparse(); }
-						| COM_HELP COM_UPDATE SEMI_COLON { help("UPDATE"); yyparse(); }
-						| COM_HELP COM_DELETE SEMI_COLON { help("DELETE"); yyparse(); }
-						| COM_HELP COM_DROP SEMI_COLON   { help("DROP");   yyparse(); }
-						| COM_HELP COM_DESC SEMI_COLON   { help("DESC");   yyparse(); }
-						| COM_HELP COM_ALTER SEMI_COLON  { help("ALTER");  yyparse(); };
+help_statement			: COM_HELP COM_SELECT SEMI_COLON { help($2); yyparse(); }	
+						| COM_HELP COM_INSERT SEMI_COLON { help($2); yyparse(); }
+						| COM_HELP COM_CREATE SEMI_COLON { help($2); yyparse(); }
+						| COM_HELP COM_UPDATE SEMI_COLON { help($2); yyparse(); }
+						| COM_HELP COM_DELETE SEMI_COLON { help($2); yyparse(); }
+						| COM_HELP COM_DROP SEMI_COLON   { help($2); yyparse(); }
+						| COM_HELP COM_DESC SEMI_COLON   { help($2); yyparse(); }
+						| COM_HELP COM_ALTER SEMI_COLON  { help($2); yyparse(); };
 
 // Exit statements explanation
-exit_statement			: COM_EXIT SEMI_COLON	{ exit(0); };
+exit_statement			: COM_EXIT SEMI_COLON	{ printf("Bye!\n"); exit(0); };
 
 
 // Average aggregation statements explanation

@@ -10,15 +10,28 @@
 
 #include "../table/table.h"
 
+/**
+ * Function: create
+ * ----------------
+ * Create a new table
+ *
+ * 	table_name: Name of the table to create
+ *  attributes_str: Attributes list, formatted as: "attr1 type, attr2 type, ..., attrN type"
+ */
+void create(char *table_name, char *attributes_str);
+
 
 /**
- * Function: load_table
- * --------------------
- * Loads a table
- *
- * 	table_name: Name of the table to load
+ * Function: alter
+ * ---------------
+ * Alters the structure of a table
+ * 
+ *  table_name: Name of table to alter
+ *  action: Alter action(ADD, DELETE)
+ *  attribute: Attribute to add or remove
  */
-void load_table(char* table_name);
+void alter(char *table_name, char *attribute, ALTER_ACTION action);
+
 
 /**
  * Function: desc
@@ -27,7 +40,17 @@ void load_table(char* table_name);
  *
  * 	table_name: Name of the table to describe
  */
-void desc(char* table_name);
+void desc(char *table_name);
+
+
+/**
+ * Function: drop
+ * --------------
+ * Drops a table
+ *
+ * 	table_name: Name of the table
+ */
+void drop(char *table_name);
 
 
 /**
@@ -38,15 +61,6 @@ void desc(char* table_name);
  * 	command_name: Name of the command
  *
  */
-void help(char* command_name);
-
-/**
- * Function: drop
- * --------------
- * Drops a table
- *
- * 	table_name: Name of the table
- */
-void drop(char* table_name);
+void help(char *command_name);
 
 #endif /* COMMANDS_COMMANDS_H_ */
