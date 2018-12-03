@@ -9,7 +9,7 @@
 
 void create(char *table_name, char *attributes_str)
 {
-	create_table(table_name, attributes_str);
+	create_table(table_name, attributes_str); //Remove duplicates from table attributes definition
 }
 
 void alter(char *table_name, char *attribute, ALTER_ACTION action)
@@ -65,6 +65,13 @@ void alter(char *table_name, char *attribute, ALTER_ACTION action)
 	xmlCleanupParser();
 }
 
+int insert(char *table_name, char* attributes_list, char *values)
+{
+	
+}
+
+
+
 void desc(char *table_name)
 {
 	if (!exists(table_name))
@@ -90,6 +97,7 @@ void desc(char *table_name)
 		}
 		attributes = attributes->next;
 	}
+
 	printf("\n}");
 	free(file_name);
 	xmlFreeDoc(table);

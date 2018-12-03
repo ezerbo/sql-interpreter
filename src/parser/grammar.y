@@ -9,8 +9,7 @@
 #include <string.h>
 #include "src/commands/commands.h"
 
-int yyerror(char const *s);
-
+void yyerror(char const *s);
 int yylex(void);
 %}
 
@@ -18,7 +17,7 @@ int yylex(void);
 	char* lexeme_val;
 };
 
-%token <lexeme_val> WORD ATTR ATTRS INSERT_VALUES
+%token <lexeme_val> WORD ATTRS WORD_LIST
 %token DIFF EQUALS STAR RIGHT_PARENTHESIS LEFT_PARENTHESIS SEMI_COLON
 
 //TOKENS MATCHING SQL COMMANDS
@@ -42,7 +41,7 @@ sql_statement	: create_table_statement
 				| help_statement
 				| exit_statement
 				| aggregation_statement
-				| error { yyerrok; yyclearin; }
+				| error {  yyclearin;yyerrok; }
 				;
 
 // Explaination of an aggregation statement
@@ -52,18 +51,19 @@ aggregation_statement	: average_aggregation
 						| minimum_aggregation
 						;
 
+ 
 // Create statements explanation
 create_table_statement	: COM_CREATE COM_TABLE WORD LEFT_PARENTHESIS ATTRS RIGHT_PARENTHESIS SEMI_COLON		{ create($3, $5); yyparse(); };
 
 // Insert statements explanation
-insert_into_statement	: COM_INSERT COM_INTO WORD COM_VALUES LEFT_PARENTHESIS INSERT_VALUES RIGHT_PARENTHESIS SEMI_COLON	{ printf("insert"); yyparse(); };
+insert_into_statement	: COM_INSERT COM_INTO WORD COM_VALUES LEFT_PARENTHESIS WORD_LIST RIGHT_PARENTHESIS SEMI_COLON	{ printf("insert"); yyparse(); };
 
 // Select statments explanation
 select_statement		: COM_SELECT WORD COM_FROM WORD	SEMI_COLON	{ printf("select"); yyparse(); }
 						| COM_SELECT STAR COM_FROM WORD	SEMI_COLON	{ printf("select star"); yyparse(); };
 
 // Alter statements explanation
-alter_table_statement	: COM_ALTER COM_TABLE WORD COM_ADD ATTR	SEMI_COLON		{ alter($3, $5, ADD); yyparse();} // ADD and DELETE are enums defined in tables/table.h
+alter_table_statement	: COM_ALTER COM_TABLE WORD COM_ADD ATTRS	SEMI_COLON		{ alter($3, $5, ADD); yyparse();} // ADD and DELETE are enums defined in tables/table.h
 						| COM_ALTER COM_TABLE WORD COM_REMOVE WORD	SEMI_COLON	{ alter($3, $5, DELETE); yyparse();};
 
 // Delete statements explanation
@@ -106,14 +106,18 @@ maximum_aggregation			: COM_SELECT FUNCT_MAX LEFT_PARENTHESIS WORD RIGHT_PARENTH
 // Minimum aggregation statements explanation
 minimum_aggregation			: COM_SELECT FUNCT_MIN LEFT_PARENTHESIS WORD RIGHT_PARENTHESIS COM_FROM WORD SEMI_COLON		{ printf("minimum"); yyparse(); };
 
-
 %%
 
 /**
 *	Handles systax errors
 **/
-int yyerror(char const *s) {
-	fprintf(stderr, "Syntax error, please review query and try again.");
+void yyerror(char const *s)
+{
+	printf("Syntax error, please review query and try again.");
+}
+
+int main(int argc, char* argv[]) 
+{
 	yyparse();
-	return (0);
+	return(0);
 }
