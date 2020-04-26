@@ -14,22 +14,22 @@ int yylex(void);
 %}
 
 %union {
-	char* lexeme_val;
+	char* string_value;
 };
 
-%token <lexeme_val> WORD ATTRS WORD_LIST
-%token DIFF EQUALS STAR RIGHT_PARENTHESIS LEFT_PARENTHESIS SEMI_COLON
+%token <string_value> WORD ATTRS WORD_LIST
+%token <string_value> DIFF EQUALS STAR RIGHT_PARENTHESIS LEFT_PARENTHESIS SEMI_COLON
 
 //TOKENS MATCHING SQL COMMANDS
-%token <lexeme_val> COM_WHERE COM_SELECT COM_ALTER COM_CREATE COM_INTO COM_VALUES COM_DELETE COM_INSERT
-%token <lexeme_val> COM_FROM COM_TABLE COM_DESC COM_UPDATE COM_SET COM_DROP COM_HELP COM_ADD COM_REMOVE COM_EXIT
+%token <string_value> COM_WHERE COM_SELECT COM_ALTER COM_CREATE COM_INTO COM_VALUES COM_DELETE COM_INSERT
+%token <string_value> COM_FROM COM_TABLE COM_DESC COM_UPDATE COM_SET COM_DROP COM_HELP COM_ADD COM_REMOVE COM_EXIT
 
 //AGGREGATION FUNCTIONS TOKENS
 %token FUNCT_AVG FUNCT_SUM FUNCT_MIN FUNCT_MAX
 
 %%
 
-// Explaination of a SQL statement
+// Production rules of a CQL statement
 sql_statement	: create_table_statement
 				| insert_into_statement
 				| select_statement
@@ -44,7 +44,7 @@ sql_statement	: create_table_statement
 				| error {  yyclearin;yyerrok; }
 				;
 
-// Explaination of an aggregation statement
+// Production rules of an aggregation statement
 aggregation_statement	: average_aggregation
 						| summation_aggregation
 						| maximum_aggregation
@@ -52,11 +52,12 @@ aggregation_statement	: average_aggregation
 						;
 
  
-// Create statements explanation
+// Create statements production rules
 create_table_statement	: COM_CREATE COM_TABLE WORD LEFT_PARENTHESIS ATTRS RIGHT_PARENTHESIS SEMI_COLON		{ create($3, $5); yyparse(); };
 
-// Insert statements explanation
-insert_into_statement	: COM_INSERT COM_INTO WORD COM_VALUES LEFT_PARENTHESIS WORD_LIST RIGHT_PARENTHESIS SEMI_COLON	{ printf("insert"); yyparse(); };
+// Insert statements production rules
+insert_into_statement	: COM_INSERT COM_INTO WORD COM_VALUES LEFT_PARENTHESIS WORD_LIST RIGHT_PARENTHESIS SEMI_COLON	{ insert($3, NULL, $6); yyparse(); };
+						| COM_INSERT COM_INTO WORD COM_VALUES LEFT_PARENTHESIS WORD RIGHT_PARENTHESIS SEMI_COLON	    { insert($3, NULL, $6); yyparse(); };
 
 // Select statments explanation
 select_statement		: COM_SELECT WORD COM_FROM WORD	SEMI_COLON	{ printf("select"); yyparse(); }
@@ -121,3 +122,4 @@ int main(int argc, char* argv[])
 	yyparse();
 	return(0);
 }
+//create table tintin(name string,age number, birthday date);

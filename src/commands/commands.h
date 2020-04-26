@@ -13,12 +13,24 @@
 /**
  * Function: create
  * ----------------
- * Create a new table
+ * Creates a new table
  *
  * 	table_name: Name of the table to create
  *  attributes_str: Attributes list, formatted as: "attr1 type, attr2 type, ..., attrN type"
  */
 void create(char *table_name, char *attributes_str);
+
+
+/**
+ * Function: insert
+ * ----------------
+ * Inserts a record into a table
+ *
+ * 	table_name: Name of the table to insert record into
+ *  attributes_list: list of table's attibutes, formatted as: "attr1, attr2, ..., attrN"
+ *  values: Value of attributes listed in `attributes_list`
+ */
+void insert(char *table_name, char* attributes_list, char *values);
 
 
 /**

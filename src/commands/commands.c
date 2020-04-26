@@ -49,7 +49,7 @@ void alter(char *table_name, char *attribute, ALTER_ACTION action)
 		xmlNodePtr cur_node = structure->children;
 		while (cur_node)
 		{
-			if (!xmlStrcasecmp(cur_node->name, attr->name))
+			if (!xmlStrcasecmp(cur_node->name, BAD_CAST attr->name))
 			{
 				xmlUnlinkNode(cur_node);
 				xmlFreeNode(cur_node);
@@ -65,42 +65,43 @@ void alter(char *table_name, char *attribute, ALTER_ACTION action)
 	xmlCleanupParser();
 }
 
-int insert(char *table_name, char* attributes_list, char *values)
+void insert(char *table_name, char *attributes_list, char *values)
 {
-	
-}
-
-
-
-void desc(char *table_name)
-{
-	if (!exists(table_name))
+	if (count(values) != get_attributes_count(table_name))
 	{
-		printf("Table %s was not found", table_name);
+		printf("Mismatch between number of attributes received and expected!");
 		return;
 	}
 
-	char *file_name = get_table_file_name(table_name);
-	xmlDocPtr table = xmlParseFile(file_name);
-	xmlNodePtr root_node = xmlDocGetRootElement(table);
-	table_attribute *attributes = get_table_attributes(root_node);
-	printf("\n{\n");
-	while (attributes != NULL)
+	xmlNodePtr table = load_table(table_name);
+	table_attribute *attributes = get_table_attributes(table);
+	char *value = strsep(&values, ",");
+	while (attributes)
 	{
-		if (attributes->next != NULL)
-		{
-			printf("  \"%s\": \"%s\",\n", attributes->name, attributes->type);
-		}
-		else
-		{
-			printf("  \"%s\": \"%s\"", attributes->name, attributes->type);
-		}
+		attributes->type;
+		value = strsep(&values, ",");
 		attributes = attributes->next;
 	}
 
-	printf("\n}");
-	free(file_name);
-	xmlFreeDoc(table);
+	xmlFreeDoc(table->doc);
+	//xmlNodePtr table = load_table(table_name);
+}
+
+void desc(char *table_name) {
+	if (!exists(table_name)) {
+		printf("Table %s was not found", table_name);
+		return;
+	}
+	xmlNodePtr table = load_table(table_name);
+	table_attribute *attributes = get_table_attributes(table);
+	printf("\n------------------------- \n");
+	printf("Name : %s \n", table_name);
+	printf("------------------------- \n");
+	while (attributes != NULL) {
+		printf("%s --> %s \n", attributes->name, attributes->type);
+		attributes = attributes->next;
+	}
+	xmlFreeDoc(table->doc);
 	xmlCleanupParser();
 }
 

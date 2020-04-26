@@ -24,6 +24,8 @@ void test_alter();
 void test_attribute_exists();
 void test_is_attribute_valide();
 void test_update_record();
+void test_get_attributes_count();
+void test_validate_attribute_value();
 
 int main(int argc, char **argv)
 {
@@ -38,14 +40,26 @@ int main(int argc, char **argv)
 	//test_desc();
 	//test_deregister();
 	//test_drop();
-	test_alter();
+	//test_alter();
 	//test_attribute_exists();
 	//test_is_attribute_valide();
 	//test_update_record();
+	//test_get_attributes_count();
+	test_validate_attribute_value();
+}
+void test_validate_attribute_value()
+{
+	int result = validate_attribute_value(strdup("2078-11-30"), strdup("date"));
+	printf("Result: %d", result);
+}
+
+void test_get_attributes_count() {
+	int attributes_count = get_attributes_count(strdup("ezerbo"));
+	printf("Records: %d", attributes_count);
 }
 
 void test_update_record() {
-	int updated_records = update_records(strdup("person"), strdup("test"));
+	int updated_records = update_records(strdup("person"), strdup("test"), ADD);
 	printf("Records: %d", updated_records);
 }
 
@@ -61,7 +75,7 @@ void test_attribute_exists() {
 
 void test_alter()
 {
-	alter(strdup("person"), strdup("test1 string"), strdup("add"));
+	alter(strdup("person"), strdup("test1 string"), ADD);
 }
 
 void test_desc()
@@ -90,8 +104,8 @@ void test_get_table_structure()
 void test_count_attributes()
 {
 	printf("---------------------\n");
-	int count = count_attributes(strdup("name string,age integer,another test"));
-	printf("Count: %d\n", count);
+	int attributes_count = count(strdup("name string,age integer,another test"));
+	printf("Count: %d\n", attributes_count);
 }
 
 void test_parse_attribute()

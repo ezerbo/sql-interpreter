@@ -10,7 +10,7 @@
 void create_table(char *table_name, char *attributes_str)
 {
 	create_metadata_file(); // skips if metadata file exists
-	int attributes_count = count_attributes(attributes_str);
+	int attributes_count = count(attributes_str);
 	if (exists(table_name))
 	{
 		fprintf(stderr, "Table with name '%s' already exists", table_name);
@@ -22,14 +22,14 @@ void create_table(char *table_name, char *attributes_str)
 	xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST TBL_NODE_NAME);
 	xmlDocSetRootElement(table_doc, root_node);
 
-	xmlSetProp(root_node, BAD_CAST NAME_ATTR, BAD_CAST table_name);	//Set 'name' property of table
+	xmlSetProp(root_node, BAD_CAST NAME_ATTR, BAD_CAST table_name);		 //Set 'name' property of table
 	xmlNodePtr struct_node = xmlNewNode(NULL, BAD_CAST STRCT_NODE_NAME); //create <struct> node in table file
 	table_attribute *attributes = parse_attributes(attributes_str);
 	while (attributes != NULL)
 	{
-		xmlNodePtr attr_node = xmlNewNode(NULL, BAD_CAST attributes->name);		  // Set node name
+		xmlNodePtr attr_node = xmlNewNode(NULL, BAD_CAST attributes->name);   // Set node name
 		xmlSetProp(attr_node, BAD_CAST TYPE_ATTR, BAD_CAST attributes->type); //Set 'type' attribut of new node
-		xmlAddChild(struct_node, attr_node);									  // Add new node as child of '<struct></struct>' node
+		xmlAddChild(struct_node, attr_node);								  // Add new node as child of '<struct></struct>' node
 		attributes = attributes->next;
 	}
 
@@ -88,13 +88,17 @@ table_attribute *parse_attribute(char *attr_string)
 	return attr;
 }
 
-int count_attributes(char *sql_query)
+int count(char *cs_str)
 {
-	//if(sql_query == NULL || strcmp(sql_query, '\0') == 0) return 0;
-	int count = 1;
-	for (int i = 0; i < strlen(sql_query); i++)
+	if (strlen(cs_str) == 0)
 	{
-		if (sql_query[i] == ',')
+		return 0;
+	}
+
+	int count = 1;
+	for (int i = 0; i < strlen(cs_str); i++)
+	{
+		if (cs_str[i] == ',')
 			count++;
 	}
 	return count;
@@ -102,13 +106,13 @@ int count_attributes(char *sql_query)
 
 void register_table(char *table_name, int attributes_count)
 {
-	char ac_char[3];
-	snprintf(ac_char, 3, "%d", attributes_count);
+	char count[3];
+	snprintf(count, 3, "%d", attributes_count);
 	xmlNodePtr metadata = load_metadata();
 	xmlNodePtr table = xmlNewNode(NULL, BAD_CAST TBL_NODE_NAME);
 	xmlSetProp(table, BAD_CAST NAME_ATTR, BAD_CAST table_name);
 	xmlSetProp(table, BAD_CAST "records_count", BAD_CAST "0"); // 0 record when table is created
-	xmlSetProp(table, BAD_CAST "attributes_count", BAD_CAST ac_char);
+	xmlSetProp(table, BAD_CAST "attributes_count", BAD_CAST count);
 	xmlAddChild(metadata, table);
 	xmlSaveFile(METADATA_FILE_NAME, metadata->doc);
 	xmlFreeDoc(metadata->doc);
@@ -217,7 +221,8 @@ xmlNodePtr get_table_structure(xmlNodePtr table)
 
 int is_valid_attribute_type(char *attribute_type)
 {
-	if (!(strcasecmp(attribute_type, "string") && strcasecmp(attribute_type, "int") && strcasecmp(attribute_type, "date")))
+	if (!(strcasecmp(attribute_type, str(STRING)) && strcasecmp(attribute_type, str(NUMBER))
+		&& strcasecmp(attribute_type, str(DATE))))
 	{
 		return (1);
 	}
@@ -269,7 +274,7 @@ int update_records(char *table_name, char *attribute_name, ALTER_ACTION action)
 						xmlNodePtr cur_record = record->children;
 						while (cur_record)
 						{
-							if (!xmlStrcasecmp(cur_record->name, attribute_name))
+							if (!xmlStrcasecmp(cur_record->name, BAD_CAST attribute_name))
 							{
 								xmlUnlinkNode(cur_record);
 								xmlFreeNode(cur_record);
@@ -297,5 +302,65 @@ int is_record_updated(xmlNodePtr record_node, char *attribute_name)
 			return (1);
 		}
 	}
+	return (0);
+}
+
+int get_attributes_count(char* table_name)
+{
+	int attributes_count = 0;
+	if(!exists(table_name))
+	{
+		printf("No such table `%s`", table_name);
+	}
+	xmlNodePtr tables = load_metadata()->children;
+	while(tables)
+	{
+		if(tables->type == XML_ELEMENT_NODE && !xmlStrcasecmp(tables->name, BAD_CAST TBL_NODE_NAME)
+				&& !xmlStrcasecmp(xmlGetProp(tables, BAD_CAST NAME_ATTR), BAD_CAST table_name))
+		{
+			attributes_count = atoi((char *)xmlGetProp(tables, BAD_CAST "attributes_count"));
+			break;
+		}
+		tables = tables->next;
+	}
+	return attributes_count;
+}
+
+int validate_attribute_value(char *attribute_value, char *attribute_type)
+{
+	if (!strcasecmp(attribute_type, str(NUMBER)) && atoi(attribute_value) == 0 && strcasecmp(attribute_value, "0"))
+	{
+		return (1);
+	}
+
+	if (!strcasecmp(attribute_type, str(DATE)))
+	{
+		regex_t regex;
+		//[12]\\d{3}-0[1-9]|1[0-2]-0[1-9]|[12]\\d|3[01]
+		int result = regcomp(&regex, "[1-2][0-9]{3}[-]0[1-9]|1[0-2][-]0[1-9]|[12][0-9]|3[01]", REG_EXTENDED|REG_NOSUB);
+
+		if (result) {
+		    fprintf(stderr, "Could not compile regex\n");
+		    exit(1);
+		}
+		result = regexec(&regex, attribute_value, 0, NULL, 0);
+		if (!result) {
+		    puts("Match");
+		}
+		else if (result == REG_NOMATCH) {
+		    puts("No match");
+		}
+		else {
+		    fprintf(stderr, "Regex match failed:\n");
+		    exit(1);
+		}
+
+//		if(regexec(regex, attribute_value, 0, NULL, 0))
+//		{
+//			return (1);
+//		}
+		regfree(&regex);
+	}
+
 	return (0);
 }

@@ -24,10 +24,13 @@
 
 #define EXT ".xml"
 
+#define str(x) #x
+
 #include "../commons/commons.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <regex.h>
 
 /**
  * Table attributes definition
@@ -43,6 +46,8 @@ typedef struct table_attribute {
 //Actions allowed when a table is being altered
 typedef enum ALTER_ACTION { ADD, DELETE } ALTER_ACTION;
 
+typedef enum ATTRIBUTE_TYPE { STRING, NUMBER, DATE } ATTRIBUTE_TYPE;
+
 /**
  * Function: create_table
  * ----------------------
@@ -56,16 +61,16 @@ void create_table(char* table_name, char* sql_query);
 
 
 /**
- * Function: count_attributes
+ * Function: count
  * --------------------------
- * Counts the number of attributes in a 'create table' statement
+ * Counts the number of elements in a comma separated list
  *
- * 	sql_query: 'create table' statement to count attributes from
+ * 	cs_str: Comma separated list
  *
- * 	returns: the number of attributes in 'sql_query'
+ * 	returns: the number of attributes in 'list_attributes'
 
  **/
-int count_attributes(char* sql_query);
+int count(char* cs_str);
 
 
 /**
@@ -255,6 +260,10 @@ int update_records(char *table_name, char *attribute_name, ALTER_ACTION action);
  */
 int is_record_updated(xmlNodePtr record_node, char *attribute_name);
 
+
+int get_attributes_count(char* table_name);
+
+int validate_attribute_value(char *attribute_value, char *attribute_type);
 
 
 #endif /* TABLE_TABLE_H_ */
